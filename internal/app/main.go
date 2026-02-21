@@ -7,6 +7,7 @@ import (
 
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
 	"github.com/yertaypert/go-assignment3/internal/handler"
+	"github.com/yertaypert/go-assignment3/internal/middleware"
 	"github.com/yertaypert/go-assignment3/internal/repository"
 	"github.com/yertaypert/go-assignment3/internal/repository/_postgres"
 	"github.com/yertaypert/go-assignment3/internal/usecase"
@@ -30,12 +31,31 @@ func Run() {
 	// Handler Layer
 	userHandler := handler.NewUserHandler(userUsecase)
 
-	// Setup routes
-	http.HandleFunc("/users", userHandler.GetUsers)
-	http.HandleFunc("/users/get", userHandler.GetUserByID) // /users/get?id=1
-	http.HandleFunc("/users/create", userHandler.CreateUser)
-	http.HandleFunc("/users/update", userHandler.UpdateUser)
-	http.HandleFunc("/users/delete", userHandler.DeleteUser)
+	// Setup the handlers
+	getUsersHandler := http.HandlerFunc(userHandler.GetUsers)
+	getUserByIDHandler := http.HandlerFunc(userHandler.GetUserByID)
+	createUserHandler := http.HandlerFunc(userHandler.CreateUser)
+	updateUserHandler := http.HandlerFunc(userHandler.UpdateUser)
+	deleteUserHandler := http.HandlerFunc(userHandler.DeleteUser)
+
+	// Wrap handlers in Middleware and Register them
+	// For GET /users
+	http.Handle("/users", middleware.Logging(middleware.Auth(getUsersHandler)))
+
+	// For /users/get
+	http.Handle("/users/get", middleware.Logging(middleware.Auth(getUserByIDHandler)))
+
+	// For /users/create
+	http.Handle("/users/create", middleware.Logging(middleware.Auth(createUserHandler)))
+
+	// For /users/update
+	http.Handle("/users/update", middleware.Logging(middleware.Auth(updateUserHandler)))
+
+	// For /users/delete
+	http.Handle("/users/delete", middleware.Logging(middleware.Auth(deleteUserHandler)))
+
+	// HealthCheck
+	http.Handle("/health", middleware.Logging(http.HandlerFunc(handler.Healthcheck)))
 
 	// Start server
 	println("Server starting on :8080...")
