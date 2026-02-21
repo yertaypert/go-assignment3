@@ -3,9 +3,10 @@ package middleware
 import (
 	"log"
 	"net/http"
+	"os"
 )
 
-const validAPIKey = "my-secret-key"
+var validAPIKey = os.Getenv("API_KEY")
 
 func Auth(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

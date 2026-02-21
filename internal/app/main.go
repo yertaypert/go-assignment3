@@ -2,10 +2,13 @@ package app
 
 import (
 	"context"
+	"log"
 	"net/http"
+	"os"
 	"time"
 
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
+	"github.com/joho/godotenv"
 	"github.com/yertaypert/go-assignment3/internal/handler"
 	"github.com/yertaypert/go-assignment3/internal/middleware"
 	"github.com/yertaypert/go-assignment3/internal/repository"
@@ -15,6 +18,11 @@ import (
 )
 
 func Run() {
+	err := godotenv.Load()
+	if err != nil {
+		log.Println("Warning: No .env file found, using system environment variables")
+	}
+
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
@@ -58,8 +66,12 @@ func Run() {
 	http.Handle("/health", middleware.Logging(http.HandlerFunc(handler.Healthcheck)))
 
 	// Start server
-	println("Server starting on :8080...")
-	if err := http.ListenAndServe(":8080", nil); err != nil {
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080" // Default fallback
+	}
+	println("Server starting on :", port, "...")
+	if err := http.ListenAndServe(":"+port, nil); err != nil {
 		panic(err)
 	}
 
@@ -131,11 +143,11 @@ func Run() {
 
 func initPostgreConfig() *modules.PostgreConfig {
 	return &modules.PostgreConfig{
-		Host:        "localhost",
-		Port:        "5432",
-		Username:    "postgres",
-		Password:    "starPsql1221!",
-		DBName:      "mydb",
+		Host:        os.Getenv("DB_HOST"),
+		Port:        os.Getenv("DB_PORT"),
+		Username:    os.Getenv("DB_USERNAME"),
+		Password:    os.Getenv("DB_PASSWORD"),
+		DBName:      os.Getenv("DB_NAME"),
 		SSLMode:     "disable",
 		ExecTimeout: 5 * time.Second,
 	}
