@@ -21,7 +21,7 @@ func NewPGXDialect(ctx context.Context, cfg *modules.PostgreConfig) *Dialect {
 		cfg.Host, cfg.Port, cfg.Username, cfg.Password, cfg.DBName, cfg.SSLMode)
 	db, err := sqlx.Connect("postgres", dsn)
 	if err != nil {
-		panic(err)
+		panic(err) // not recommended to panic if db con fails, return error instead
 	}
 	err = db.Ping()
 
