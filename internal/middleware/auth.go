@@ -6,11 +6,9 @@ import (
 	"os"
 )
 
-var validAPIKey = os.Getenv("API_KEY")
-
 func Auth(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-
+		validAPIKey := os.Getenv("API_KEY")
 		apiKey := r.Header.Get("X-API-KEY")
 
 		if apiKey == "" {
